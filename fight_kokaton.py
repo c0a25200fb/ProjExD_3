@@ -277,7 +277,7 @@ def main():
                         
         bombs = [bomb for bomb in bombs if bomb is not None]
         beams = [beam for beam in beams if beam is not None]
-        
+        explosions = [exp for exp in explosions if exp.life > 0]
             
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
@@ -287,7 +287,7 @@ def main():
             bomb.update(screen)
         for explosion in explosions:
             explosion.update(screen)
-        explosions = [exp for exp in explosions if exp.life > 0]
+        
         score.update(screen)
         pg.display.update()
         tmr += 1
