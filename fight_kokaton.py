@@ -183,7 +183,31 @@ class Explosion:
         self.life -= 1
         # 2つの画像を交互に切り替える
         img_idx = self.life % 2
-        screen.blit(self.imgs[img_idx], self.rct)        
+        screen.blit(self.imgs[img_idx], self.rct)    
+
+
+class Shield:
+    """
+    こうかとんを守るバリアに関するクラス
+    """
+    def __init__(self, bird: Bird, life: int):
+        """
+        こうかとんのオブジェクトと、バリアの耐久値を受け取る
+        """
+        self.bird = bird
+        self.life = life  # バリアの耐久値 
+        self.radius = 40
+        self.img = pg.Surface((self.radius * 2, self.radius * 2), pg.SRCALPHA)
+        pg.draw.circle(self.img, (0, 0, 255, 100), (self.radius, self.radius), self.radius)
+        self.rct = self.img.get_rect()
+        self.rct.center = self.bird.rct.center # 初期位置をこうかとんの中心に合わせる
+
+    def update(self, screen: pg.Surface) -> None:
+        """
+        こうかとんの位置に追従して移動し、描画する
+        """
+        self.rct.center = self.bird.rct.center
+        screen.blit(self.img, self.rct)    
 
 
 def main():
@@ -197,6 +221,7 @@ def main():
     beams: list[Beam] = []
     explosions: list[Explosion] = []
     score = Score()
+    shield = None
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -204,8 +229,27 @@ def main():
             if event.type == pg.QUIT: return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキーが押されるたびにリストへ追加
-                beams.append(Beam(bird))            
+                beams.append(Beam(bird))    
+            if event.type == pg.KEYDOWN and event.key == pg.K_b:
+                if shield is None: # 重複を防ぐ
+                    shield = Shield(bird, 1) # 1回だけ耐えられるバリア        
         screen.blit(bg_img, [0, 0])
+        
+        
+            
+        
+        if shield is not None:
+            shield.update(screen) # 描画と位置更新
+            
+            for i, bomb in enumerate(bombs):
+                if shield.rct.colliderect(bomb.rct):
+                        # 爆弾を消滅させ、バリアの耐久値を減らす
+                    bombs.pop(i)
+                    explosions.append(Explosion(bomb))
+                    shield.life -= 1                
+                    if shield.life <= 0:
+                        shield = None # 耐久値が0になったらバリア消滅
+                    break
         
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
